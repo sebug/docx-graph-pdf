@@ -8,4 +8,4 @@ var config = new ConfigurationBuilder()
 
 var settings = config.GetRequiredSection("DocxGraphPdf").Get<DocxGraphPdfOptions>();
 
-Console.WriteLine("Hello, " + settings.ApplicationID);
+Console.WriteLine("Hello, " + settings.RedirectUri);
