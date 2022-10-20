@@ -1,4 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using System.Net.Http.Headers;
 using docx_graph_pdf;
 using docx_graph_pdf.Helpers;
 using Microsoft.Extensions.Configuration;
@@ -41,7 +42,21 @@ var uploadResponse = await largeFileUploadTask.UploadAsync();
 
 var requestUrl = client.Drive.Root.ItemWithPath(r.Name + "/" + System.IO.Path.GetFileName(args[0])).RequestUrl + "/content?format=pdf";
 
-Console.WriteLine("file created: " + requestUrl);
+var cca = BuildConfidentialClientApplication(settings);
+
+var tokenResponse = await cca.AcquireTokenForClient(new List<string>()
+{
+    "https://graph.microsoft.com/.default"
+}).ExecuteAsync();
+
+var httpClient = new HttpClient();
+httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
+
+var convertResponse = await httpClient.GetAsync(requestUrl);
+
+var responseBytes = await convertResponse.Content.ReadAsByteArrayAsync();
+
+System.IO.File.WriteAllBytes(args[0].Replace(".docx", ".pdf"), responseBytes);
 
 GraphServiceClient GetAuthenticatedGraphClient(DocxGraphPdfOptions options)
 {
@@ -50,18 +65,25 @@ GraphServiceClient GetAuthenticatedGraphClient(DocxGraphPdfOptions options)
     return graphClient;
 }
 
-IAuthenticationProvider CreateAuthorizationProvider(DocxGraphPdfOptions options)
+IConfidentialClientApplication BuildConfidentialClientApplication(DocxGraphPdfOptions options)
 {
-    var scopes = new List<string>()
-    {
-        "https://graph.microsoft.com/.default"
-    };
     var authority = $"https://login.microsoftonline.com/{options.TenantID}/v2.0";
     var cca = ConfidentialClientApplicationBuilder.Create(options.ApplicationID)
         .WithAuthority(authority)
         .WithRedirectUri(options.RedirectUri)
         .WithClientSecret(options.ApplicationSecret)
         .Build();
+    return cca;
+}
+
+
+IAuthenticationProvider CreateAuthorizationProvider(DocxGraphPdfOptions options)
+{
+    var scopes = new List<string>()
+    {
+        "https://graph.microsoft.com/.default"
+    };
+    var cca = BuildConfidentialClientApplication(options);
     
     return new MsalAuthenticationProvider(cca, scopes.ToArray());
 }
