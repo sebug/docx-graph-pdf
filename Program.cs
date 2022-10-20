@@ -37,10 +37,11 @@ var uploadSession = await client.Drive.Root.ItemWithPath(r.Name + "/" + System.I
 
 var largeFileUploadTask = new LargeFileUploadTask<DriveItem>(uploadSession, System.IO.File.OpenRead(args[0]));
 
-
 var uploadResponse = await largeFileUploadTask.UploadAsync();
 
-Console.WriteLine("file created: " + uploadResponse.ItemResponse.WebUrl);
+var requestUrl = client.Drive.Root.ItemWithPath(r.Name + "/" + System.IO.Path.GetFileName(args[0])).RequestUrl + "/content?format=pdf";
+
+Console.WriteLine("file created: " + requestUrl);
 
 GraphServiceClient GetAuthenticatedGraphClient(DocxGraphPdfOptions options)
 {
