@@ -58,6 +58,8 @@ var responseBytes = await convertResponse.Content.ReadAsByteArrayAsync();
 
 System.IO.File.WriteAllBytes(args[0].Replace(".docx", ".pdf"), responseBytes);
 
+await client.Drive.Root.ItemWithPath(r.Name).Request().DeleteAsync();
+
 GraphServiceClient GetAuthenticatedGraphClient(DocxGraphPdfOptions options)
 {
     var authenticationProvider = CreateAuthorizationProvider(options);
