@@ -5,6 +5,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 
+if (args.Length == 0)
+{
+    throw new Exception("Usage: docx-graph-pdf wordFile.docx");
+}
+
 var config = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
@@ -27,7 +32,15 @@ var item = new DriveItem
 
 var r = await client.Drive.Root.Children.Request().AddAsync(item);
 
-Console.WriteLine("folder created: " + r.WebUrl);
+var uploadSession = await client.Drive.Root.ItemWithPath(r.Name + "/" + System.IO.Path.GetFileName(args[0]))
+                        .CreateUploadSession().Request().PostAsync();
+
+var largeFileUploadTask = new LargeFileUploadTask<DriveItem>(uploadSession, System.IO.File.OpenRead(args[0]));
+
+
+var uploadResponse = await largeFileUploadTask.UploadAsync();
+
+Console.WriteLine("file created: " + uploadResponse.ItemResponse.WebUrl);
 
 GraphServiceClient GetAuthenticatedGraphClient(DocxGraphPdfOptions options)
 {
