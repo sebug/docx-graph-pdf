@@ -13,7 +13,21 @@ var settings = config.GetRequiredSection("DocxGraphPdf").Get<DocxGraphPdfOptions
 
 var client = GetAuthenticatedGraphClient(settings);
 
-Console.WriteLine("Hello, " + settings.RedirectUri);
+var folderId = "Convert_" + Guid.NewGuid().ToString().Replace("-", String.Empty);
+
+var item = new DriveItem
+{
+    Name = folderId,
+    Folder = new Folder(),
+    AdditionalData = new Dictionary<string, object>()
+    {
+        {"@microsoft.graph.conflictBehavior","rename"}
+    }
+};
+
+var r = await client.Drive.Root.Children.Request().AddAsync(item);
+
+Console.WriteLine("folder created: " + r.WebUrl);
 
 GraphServiceClient GetAuthenticatedGraphClient(DocxGraphPdfOptions options)
 {

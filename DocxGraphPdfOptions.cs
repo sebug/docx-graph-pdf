@@ -6,4 +6,6 @@ public class DocxGraphPdfOptions
     public string? TenantID { get; set; }
     public string? ApplicationSecret { get; set; }
     public string? RedirectUri { get; set; }
+
+    public string? SharePointSiteURL { get; set; }
 }
